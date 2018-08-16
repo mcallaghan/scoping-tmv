@@ -41,7 +41,7 @@ DEBUG = env.bool('DJANGO_DEBUG', False)
 
 ALLOWED_HOSTS = []
 
-
+CELERY_BROKER_URL ='amqp://localhost'
 # Application definition
 
 DJANGO_APPS = (

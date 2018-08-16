@@ -40,6 +40,54 @@ Quit PostgreSQL and log out of the postgres user role
 exit
 ```
 
+### Setting up Celery
+We use celery to execute computation-heavy tasks in the background.
+To do this we need to install the *message broker* RabbitMQ
+
+```
+sudo apt-get install rabbitmq-server
+sudo systemctl enable rabbitmq-server
+sudo systemctl start rabbitmq-server
+```
+
+To start celery, run
+
+```
+celery -A config worker --loglevel=info
+```
+
+##### Production environment for celery
+
+Install supervisor
+```
+sudo apt-get install supervisor
+```
+Create a configuration file in `/etc/supervisor/conf.d/scoping-tmv-celery.conf`:
+use paths to the production version of the site, it's virtual environment
+```
+[program:mysite-celery]
+command=/home/mysite/bin/celery worker -A mysite --loglevel=INFO
+directory=/home/mysite/mysite
+user=nobody
+numprocs=1
+stdout_logfile=/home/mysite/logs/celery.log
+stderr_logfile=/home/mysite/logs/celery.log
+autostart=true
+autorestart=true
+startsecs=10
+
+; Need to wait for currently executing tasks to finish at shutdown.
+; Increase this if you have very long running tasks.
+stopwaitsecs = 600
+
+stopasgroup=true
+
+; Set Celery priority higher than default (999)
+; so, if rabbitmq is supervised, it will start first.
+priority=1000
+```
+
+
 ### Setting up scoping-tmv
 
 Operating in a virtual environment is **highly** recommended
@@ -69,6 +117,11 @@ python manage.py runserver
 ```
 
 in a production environment:
+
+Install Apache
+```
+sudo apt-get install apache2
+```
 
 
 Start the server with production settings. It's best to do this in a real server with `mod_wsgi`. This is not covered here.
