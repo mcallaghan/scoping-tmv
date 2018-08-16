@@ -95,10 +95,12 @@ Operating in a virtual environment is **highly** recommended
 ```
 pip3 install --user virtualenvironment
 
-virtualenvironment -p python3 venv
+virtualenv -p python3 venv
+
+source venv/bin/activate
 ```
 
-Once in the environment (or out of it at your own peril), install dependencies
+Once in the environment (or out of it at your own peril), install dependencies. Use requirements/local.txt for a local environment, or requirements/production.txt for a production environment.
 
 ```
 pip install -Ur requirements/local.txt
@@ -118,9 +120,9 @@ python manage.py runserver
 
 in a production environment:
 
-Install Apache
+Install Apache and its mod-wsgi library
 ```
-sudo apt-get install apache2
+sudo apt-get install apache2 libapache2-mod-wsgi-py3
 ```
 
 
