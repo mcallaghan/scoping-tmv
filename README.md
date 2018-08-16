@@ -56,38 +56,6 @@ To start celery, run
 celery -A config worker --loglevel=info
 ```
 
-##### Production environment for celery
-
-Install supervisor
-```
-sudo apt-get install supervisor
-```
-Create a configuration file in `/etc/supervisor/conf.d/scoping-tmv-celery.conf`:
-use paths to the production version of the site, it's virtual environment
-```
-[program:mysite-celery]
-command=/home/mysite/bin/celery worker -A mysite --loglevel=INFO
-directory=/home/mysite/mysite
-user=nobody
-numprocs=1
-stdout_logfile=/home/mysite/logs/celery.log
-stderr_logfile=/home/mysite/logs/celery.log
-autostart=true
-autorestart=true
-startsecs=10
-
-; Need to wait for currently executing tasks to finish at shutdown.
-; Increase this if you have very long running tasks.
-stopwaitsecs = 600
-
-stopasgroup=true
-
-; Set Celery priority higher than default (999)
-; so, if rabbitmq is supervised, it will start first.
-priority=1000
-```
-
-
 ### Setting up scoping-tmv
 
 Operating in a virtual environment is **highly** recommended
@@ -107,6 +75,7 @@ pip install -Ur requirements/local.txt
 ```
 
 generate a `.env` file containing a new secret key (keep this secret!) and your database settings.
+You will also need to enter either `local` or `production` to define what type of environment you are in
 
 ```
 python env_gen.py
@@ -125,9 +94,70 @@ Install Apache and its mod-wsgi library
 sudo apt-get install apache2 libapache2-mod-wsgi-py3
 ```
 
+Insert the following into your virtual host in the apache config file (usually located in `etc/apache`). Replace `/home/max/scoping-tmv` with the location of the site
+```
+<VirtualHost *:80>
+  . . .
 
-Start the server with production settings. It's best to do this in a real server with `mod_wsgi`. This is not covered here.
+  Alias /static /home/max/sites/scoping-tmv/static
+  <Directory /home/max/sites/scoping-tmv/static>
+      Require all granted
+  </Directory>
+
+  <Directory /home/max/sites/scoping-tmv/config>
+      <Files wsgi.py>
+          Require all granted
+      </Files>
+  </Directory>
+
+  WSGIDaemonProcess scoping-tmv python-home=/home/max/sites/scoping-tmv/venv python-path=/home/max/sites/scoping-tmv
+  WSGIProcessGroup scoping-tmv
+  WSGIScriptAlias / /home/max/sites/scoping-tmv/config/wsgi.py
+</VirtualHost>
+```
+
+
+##### Production environment for celery
+
+Install supervisor
+```
+sudo apt-get install supervisor
+```
+Create a configuration file in `/etc/supervisor/conf.d/scoping-tmv-celery.conf`:
+use paths to the production version of the site. Note the virtual environment
+```
+[program:scoping-tmv-celery]
+command=/home/max/sites/scoping-tmv/bin/celery worker -A config --loglevel=INFO
+directory=/home/max/sites/scoping-tmv
+user=max
+numprocs=1
+stdout_logfile=/home/max/sites/scoping-tmv/logs/celery.log
+stderr_logfile=/home/max/sites/scoping-tmv/logs/celery.log
+autostart=true
+autorestart=true
+startsecs=10
+
+; Need to wait for currently executing tasks to finish at shutdown.
+; Increase this if you have very long running tasks.
+stopwaitsecs = 600
+
+stopasgroup=true
+
+; Set Celery priority higher than default (999)
+; so, if rabbitmq is supervised, it will start first.
+priority=1000
+```
+
+Update with the new settings
 
 ```
-python manage.py runserver --settings=config.settings.production
+sudo supervisorctl reread
+sudo supervisorctl update
+```
+
+You can turn the celery process on or off (having more than on one machine is not advised)
+
+```
+sudo supervisorctl start scoping-tmv-celery
+sudo supervisorctl stop scoping-tmv-celery
 ```
