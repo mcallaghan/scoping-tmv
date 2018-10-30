@@ -2,7 +2,7 @@
 
 Scoping-tmv is a web application for working with literature. It assists in doing systematic reviews, and has some tools to run topic models on article abstracts.
 
-It was developed to work with **Python 3** and **Django 2.1**. It relies on a PostgreSQL database.
+It was developed to work with **Python 3.6** and **Django 2.1.2**. It relies on a PostgreSQL database.
 
 ## Quick-start
 
@@ -79,6 +79,12 @@ You will also need to enter either `local` or `production` to define what type o
 
 ```
 python env_gen.py
+```
+
+Create an admin user
+
+```
+python manage.py createsuperuser
 ```
 
 Now you're ready to run a local server
@@ -160,4 +166,13 @@ You can turn the celery process on or off (having more than on one machine is no
 ```
 sudo supervisorctl start scoping-tmv-celery
 sudo supervisorctl stop scoping-tmv-celery
+```
+
+## Development
+
+### Sass
+
+```
+sudo apt-get install ruby-full rubygems
+sudo gem install sass
 ```
